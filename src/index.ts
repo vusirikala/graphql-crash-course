@@ -29,6 +29,19 @@ const typeDefs = `#graphql
         authors: [Author]
         author(id: ID!): Author
     }
+    type Mutation {
+        addGame(game: AddGameInput): Game
+        deleteGame(id: ID!): [Game]
+        updateGame(id: ID!, edits: EditGameInput): Game
+    }
+    input AddGameInput {
+        title: String!
+        platform: [String!]!
+    }
+    input EditGameInput {
+        title: String
+        platform: [String!]
+    }
 `;
 //! means required
 // Graphql types: int, float, string, bool, ID
@@ -96,7 +109,27 @@ const resolvers = {
         author(parent: any) {
             return authors.find(author => author.id === parent.authorId)
         }
-    }
+    },
+    Mutation: {
+        deleteGame(_: any, args: any) {
+            games = games.filter(game => game.id !== args.id)
+            return games
+        },
+        addGame(_: any, args: any) {
+            const newGame = { id: Math.floor(Math.random()*10000).toString(), ...args.game }
+            games.push(newGame)
+            return newGame
+        },
+        updateGame(_: any, args: any) {
+            games = games.map(game => {
+                if(game.id === args.id) {
+                    return { ...game, ...args.edits }
+                }
+                return game
+            })
+            return games.find(game => game.id === args.id)
+        }
+    },
 };
 
 const server  = new ApolloServer({
